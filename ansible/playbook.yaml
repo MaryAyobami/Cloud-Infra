@@ -1,0 +1,42 @@
+# ansible/playbook.yml
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Change SSH port
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?Port '
+        line: 'Port 2222'
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication '
+        line: 'PasswordAuthentication no'
+
+    - name: Reload SSH
+      service:
+        name: ssh
+        state: reloaded
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    - name: Allow SSH on new port
+      ufw:
+        rule: allow
+        port: 2222
+        proto: tcp
+
+    - name: Install auditd
+      apt:
+        name: auditd
+        state: present
+
+    - name: Ensure auditd is running
+      service:
+        name: auditd
+        state: started
+        enabled: yes
